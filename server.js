@@ -5,20 +5,26 @@ const cors = require("cors");
 
 const app = express()
 
-app.use(cors())
-
-const PORT = 3000;
-
 const axios = require('axios');
 require('dotenv').config();
 
-app.use(cors());
+const pg = require("pg")
+
+app.use(cors())
+
+app.use(express.json());
+
+const PORT = 3000;
+
+const client = new pg.Client('postgresql://localhost:5432/addmovie');
 
 app.get("/", homeHandler);
 app.get("/favorite", favoriteHandler)
 app.get("/trending", trendingHandler);
 app.get('/search', searchHandler);
 app.get('/idd', movieIdHandler);
+app.get("/getMovies", getMoviewHandler);
+app.post("/getMovies", postMovieHandler);
 app.get('/person', personHandler);
 
 
@@ -26,9 +32,6 @@ app.get('/person', personHandler);
 app.get("*", defaultHandler);
 
 app.use(errorHandler);
-
-
-
 
 function Movies(id,title,release_data ,poster_path, overview) {
     this.id=id
@@ -161,6 +164,30 @@ function personHandler(req, res) {
 }
 }
 
+function getMoviewHandler(req, res) {
+    const sql = `SELECT * from firstMOV`; 
+    client.query(sql)
+        .then((data) => {
+            res.send(data.rows)
+        })
+        .catch((err) => {
+            errorHandler(err, req, res)
+        })
+}
+
+function postMovieHandler(req, res) {
+    const mov = req.body;
+    const sql = `INSERT INTO firstmov (title,release_date,poster_path,overview)
+VALUES ('${mov.title}','${mov.release_date}','${mov.poster_path}','${mov.overview}');`
+    client.query(sql)
+        .then((data) => {
+            res.send(data.rows)
+        })
+        .catch ((error) => {
+            res.status(500).send(error)
+        })
+}
+
 function errorHandler(error, req, res) {
     const err = {
         status: 500,
@@ -170,7 +197,9 @@ function errorHandler(error, req, res) {
     res.status(500).send(err)
 }
 
-
-app.listen(PORT, () => {
-    console.log("listening to 3000");
-})
+client.connect()
+    .then(
+        app.listen(PORT, () => {
+            console.log("listening to 3000");
+        })
+    )
