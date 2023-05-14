@@ -14,19 +14,33 @@ app.use(cors())
 
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const client = new pg.Client('postgresql://localhost:5432/addmovie');
 
 app.get("/", homeHandler);
-app.get("/favorite", favoriteHandler)
-app.get("/trending", trendingHandler);
-app.get('/search', searchHandler);
-app.get('/idd', movieIdHandler);
-app.get("/getMovies", getMoviewHandler);
-app.post("/getMovies", postMovieHandler);
-app.get('/person', personHandler);
 
+app.get("/favorite", favoriteHandler)
+
+
+app.get("/trending", trendingHandler);
+
+app.get('/search', searchHandler);
+
+app.get('/idd', movieIdHandler);
+
+app.get("/getMovies", getMoviewHandler);
+
+
+app.post("/getMovies", postMovieHandler);
+
+app.get("/getMovies/:newid", getsecMoviewHandler);
+
+app.delete("/getMovies/:id", deletMovieHandler);
+
+app.put("/getMovies/:iddd", UPDateMovieHandler);
+
+app.get('/person', personHandler);
 
 
 app.get("*", defaultHandler);
@@ -98,10 +112,7 @@ function searchHandler(req, res) {
                 })
                 // console.log(mapResult2);
                 res.status(200).json(mapResult2)
-
             })
-
-
             .catch((error) => {
                 // res.status(500).send(error)
             })
@@ -165,7 +176,7 @@ function personHandler(req, res) {
 }
 
 function getMoviewHandler(req, res) {
-    const sql = `SELECT * from firstMOV`; 
+    const sql = `SELECT * from firstmov`;
     client.query(sql)
         .then((data) => {
             res.send(data.rows)
@@ -177,8 +188,8 @@ function getMoviewHandler(req, res) {
 
 function postMovieHandler(req, res) {
     const mov = req.body;
-    const sql = `INSERT INTO firstmov (title,release_date,poster_path,overview)
-VALUES ('${mov.title}','${mov.release_date}','${mov.poster_path}','${mov.overview}');`
+    const sql = `INSERT INTO firstmov (title,release_date,poster_path,overview,comment)
+    VALUES ('${mov.title}','${mov.release_date}','${mov.poster_path}','${mov.overview}','${mov.comment}') RETURNING *;`
     client.query(sql)
         .then((data) => {
             res.send(data.rows)
@@ -188,11 +199,61 @@ VALUES ('${mov.title}','${mov.release_date}','${mov.poster_path}','${mov.overvie
         })
 }
 
+function deletMovieHandler(req, res) {
+    const newID = req.params.id;
+    const sql = `DELETE FROM firstmov WHERE id=${newID} RETURNING *;`;
+    client.query(sql)
+        .then((data) => {
+            const sql = `SELECT * from firstmov`;
+            client.query(sql)
+                .then((data) => {
+                    res.send(data.rows)
+                })
+                .catch((err) => {
+                    errorHandler(err, req, res)
+                })
+        })
+        .catch((err) => {
+            errorHandler(err, req, res);
+        })
+}
+
+function getsecMoviewHandler(req, res) {
+    const secID = req.params.newid
+    const sql = `SELECT * from firstMOV WHERE id=${secID}`;
+    client.query(sql)
+        .then((data) => {
+            res.send(data.rows)
+        })
+        .catch((err) => {
+            errorHandler(err, req, res)
+        })
+}
+
+function UPDateMovieHandler(req,res){
+    const therdID =req.params.iddd;
+    const show = req.body
+    const sql = `UPDATE firstmov SET comment ='${show.comment}' WHERE id =${therdID} RETURNING *`;
+    client.query(sql)
+    .then((data) => {
+        const sql = `SELECT * from firstmov`; 
+        client.query(sql)
+            .then((data) => {
+                res.send(data.rows)
+            })
+            .catch((err) => {
+                errorHandler(err, req, res)
+            })
+    })
+    .catch((err) => {
+        errorHandler(err, req, res);
+    })
+}
+
 function errorHandler(error, req, res) {
     const err = {
         status: 500,
         massage: error,
-
     }
     res.status(500).send(err)
 }
