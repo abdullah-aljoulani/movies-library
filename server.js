@@ -172,7 +172,7 @@ function personHandler(req, res) {
 }
 
 function getMoviewHandler(req, res) {
-    const sql = `SELECT * from firstmov`;
+    const sql = `SELECT * from firstMOV`;
     client.query(sql)
         .then((data) => {
             res.send(data.rows)
@@ -184,8 +184,8 @@ function getMoviewHandler(req, res) {
 
 function postMovieHandler(req, res) {
     const mov = req.body;
-    const sql = `INSERT INTO firstmov (title,release_date,poster_path,overview,comment)
-    VALUES ('${mov.title}','${mov.release_date}','${mov.poster_path}','${mov.overview}','${mov.comment}') RETURNING *;`
+    const sql = `INSERT INTO firstMOV (title,release_date,poster_path,overview)
+    VALUES ('${mov.title}','${mov.release_date}','${mov.poster_path}','${mov.overview}') RETURNING *;`
     client.query(sql)
         .then((data) => {
             res.send(data.rows)
@@ -197,10 +197,10 @@ function postMovieHandler(req, res) {
 
 function deletMovieHandler(req, res) {
     const newID = req.params.id;
-    const sql = `DELETE FROM firstmov WHERE id=${newID} RETURNING *;`;
+    const sql = `DELETE FROM firstMOV WHERE id=${newID} RETURNING *;`;
     client.query(sql)
         .then((data) => {
-            const sql = `SELECT * from firstmov`;
+            const sql = `SELECT * from firstMOV`;
             client.query(sql)
                 .then((data) => {
                     res.send(data.rows)
@@ -229,10 +229,10 @@ function getsecMoviewHandler(req, res) {
 function UPDateMovieHandler(req,res){
     const therdID =req.params.iddd;
     const show = req.body
-    const sql = `UPDATE firstmov SET comment ='${show.comment}' WHERE id =${therdID} RETURNING *`;
+    const sql = `UPDATE firstMOV SET comment ='${show.comment}' WHERE id =${therdID} RETURNING *`;
     client.query(sql)
     .then((data) => {
-        const sql = `SELECT * from firstmov`; 
+        const sql = `SELECT * from firstMOV`; 
         client.query(sql)
             .then((data) => {
                 res.send(data.rows)
