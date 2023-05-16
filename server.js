@@ -22,7 +22,7 @@ function Movies(title, poster_path, overview) {
 
 
 app.get("/", (req, res) => {
-    const data = require("./data.json");
+    const data = require("./Movie Data/data.json");
     let newMovie = new Movies(
         data.title , data.poster_path ,data.overview
     )
