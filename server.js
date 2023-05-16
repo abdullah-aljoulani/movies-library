@@ -10,13 +10,15 @@ require('dotenv').config();
 
 const pg = require("pg")
 
+const APIKEY = process.env.APIkey;
+
 app.use(cors())
 
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 
-const client = new pg.Client('postgresql://localhost:5432/addmovie');
+const client = new pg.Client(process.env.DBURL)
 
 app.get("/", homeHandler);
 
@@ -75,8 +77,6 @@ function defaultHandler(req,res){
 }
 
 
-const APIKEY = process.env.APIkey;
-
 function trendingHandler(req, res) {
     try {
         const url = `https://api.themoviedb.org/3/trending/all/week?api_key=${APIKEY}`;
@@ -114,7 +114,7 @@ function searchHandler(req, res) {
                 res.status(200).json(mapResult2)
             })
             .catch((error) => {
-                // res.status(500).send(error)
+                errorHandler(error, req, res)
             })
 
     }
@@ -141,7 +141,7 @@ function movieIdHandler(req, res) {
 
 
             .catch((error) => {
-                // res.status(500).send(error)
+                errorHandler(error, req, res)
             })
 
     }
@@ -162,14 +162,10 @@ function personHandler(req, res) {
                 //     return movieId;
                 res.send(c.data)
             })
-        // console.log(mapResult3);
-        // res.status(200).json(mapResult3)
-
         .catch ((error) => {
-            // res.status(500).send(error)
+            errorHandler(error, req, res)
         })
     }
-
     catch (error) {
     errorHandler(error, req, res)
 }
@@ -262,5 +258,9 @@ client.connect()
     .then(
         app.listen(PORT, () => {
             console.log("listening to 3000");
-        })
+        }
     )
+    )
+    .catch((err) => {
+        console.log(err)
+    })
