@@ -44,6 +44,8 @@ app.put("/getMovies/:iddd", UPDateMovieHandler);
 
 app.get('/addMovie',getMovieHandler)
 app.post('/addMovie',addMovieHandler)
+// app.put('/addMovie',updateMoviesHandler)
+app.delete('/addMovie/:id',deleteMoviesHandler)
 
 app.get('/person', personHandler);
 
@@ -263,7 +265,7 @@ function UPDateMovieHandler(req,res){
 
 function getMovieHandler(req,res){
     Movie.all=[];
-    const sql = `SELECT * from movies`
+    const sql = `SELECT * from firstMOV`
     client.query(sql).then(result =>{
         result.rows.map(item => new Movie(item.title,item.movies_id,item.overview,item.poster_path,item.vote_average,item.vote_count))
         res.status(200).json({
@@ -276,7 +278,7 @@ function getMovieHandler(req,res){
 
 function addMovieHandler(req,res){
     const userInput = req.body;
-    const sql = `INSERT INTO movies(title , movies_id , overview , poster_path , vote_average , vote_count)
+    const sql = `INSERT INTO firstMOV(title , movies_id , overview , poster_path , vote_average , vote_count)
     VALUES($1,$2,$3,$4,$5,$6) RETURNING *`
     const sqlValues = [userInput.title , userInput.id ,userInput.overview 
         ,userInput.poster_path , userInput.vote_average , userInput.vote_count]
@@ -284,6 +286,24 @@ function addMovieHandler(req,res){
         client.query(sql , sqlValues).then(result => {
             res.status(201).json(result.rows)
         }).catch(err => errorHandler(err,req,res))
+}
+
+// function updateMoviesHandler(req,res){
+//     const id = req.params.id;
+//     const userInput = req.body;
+
+//     const sql = `update movies set `
+
+// }
+
+function deleteMoviesHandler(req,res){
+    const id = req.params.id;
+
+    const sql = `delete from firstMOV where id =${id}`;
+
+    client.query(sql).then(result =>{
+        res.status(204).json(result.rowCount)
+    }).catch(err => errorHandler(err,req,res))
 }
 
 function errorHandler(error, req, res) {
@@ -297,7 +317,7 @@ function errorHandler(error, req, res) {
 client.connect()
     .then(
         app.listen(PORT, () => {
-            console.log("listening to 3000");
+            console.log(`listening to ${PORT}`);
         }
     )
     )
