@@ -16,7 +16,7 @@ app.use(cors())
 
 app.use(express.json());
 
-const PORT = process.env.PORT || 3005;
+const PORT = process.env.PORT || 3001;
 
 const client = new pg.Client(process.env.DBURL)
 
@@ -42,6 +42,9 @@ app.delete("/getMovies/:id", deletMovieHandler);
 
 app.put("/getMovies/:iddd", UPDateMovieHandler);
 
+app.get('/addMovie',getMovieHandler)
+app.post('/addMovie',addMovieHandler)
+
 app.get('/person', personHandler);
 
 
@@ -56,6 +59,18 @@ function Movies(id,title,release_data ,poster_path, overview) {
     this.poster_path = poster_path
     this.overview = overview
 }
+
+function Movie(title,id,overview,poster_path,vote_average,vote_count){
+    this.title = title;
+    this.id = id;
+    this.overview = overview;
+    this.poster_path = poster_path;
+    this.vote_average = vote_average;
+    this.vote_count = vote_count;
+    Movie.all.push(this)
+}
+
+Movie.all=[];
 
 const data = require ("./Movie Data/data.json")
 
@@ -185,7 +200,7 @@ function getMoviewHandler(req, res) {
 function postMovieHandler(req, res) {
     const mov = req.body;
     const sql = `INSERT INTO firstMOV (title,release_date,poster_path,overview)
-    VALUES ('${mov.title}','${mov.release_date}','${mov.poster_path}','${mov.overview}') RETURNING *;`
+    VALUES ('${mov.title}','${mov.release_date}','${mov.poster_path}','${mov.overview}',') RETURNING *;`
     client.query(sql)
         .then((data) => {
             res.send(data.rows)
@@ -244,6 +259,31 @@ function UPDateMovieHandler(req,res){
     .catch((err) => {
         errorHandler(err, req, res);
     })
+}
+
+function getMovieHandler(req,res){
+    Movie.all=[];
+    const sql = `SELECT * from movies`
+    client.query(sql).then(result =>{
+        result.rows.map(item => new Movie(item.title,item.movies_id,item.overview,item.poster_path,item.vote_average,item.vote_count))
+        res.status(200).json({
+            code : 200,
+            movie : Movie.all
+        })
+        }
+        ).catch(err => errorHandler(err,req,res))
+    }
+
+function addMovieHandler(req,res){
+    const userInput = req.body;
+    const sql = `INSERT INTO movies(title , movies_id , overview , poster_path , vote_average , vote_count)
+    VALUES($1,$2,$3,$4,$5,$6) RETURNING *`
+    const sqlValues = [userInput.title , userInput.id ,userInput.overview 
+        ,userInput.poster_path , userInput.vote_average , userInput.vote_count]
+
+        client.query(sql , sqlValues).then(result => {
+            res.status(201).json(result.rows)
+        }).catch(err => errorHandler(err,req,res))
 }
 
 function errorHandler(error, req, res) {
