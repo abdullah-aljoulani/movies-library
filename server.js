@@ -44,7 +44,7 @@ app.put("/getMovies/:iddd", UPDateMovieHandler);
 
 app.get('/addMovie',getMovieHandler)
 app.post('/addMovie',addMovieHandler)
-// app.put('/addMovie',updateMoviesHandler)
+app.put('/addMovie/:id',updateMoviesHandler)
 app.delete('/addMovie/:id',deleteMoviesHandler)
 
 app.get('/person', personHandler);
@@ -265,7 +265,7 @@ function UPDateMovieHandler(req,res){
 
 function getMovieHandler(req,res){
     Movie.all=[];
-    const sql = `SELECT * from firstMOV`
+    const sql = `SELECT * from movies`
     client.query(sql).then(result =>{
         result.rows.map(item => new Movie(item.title,item.movies_id,item.overview,item.poster_path,item.vote_average,item.vote_count))
         res.status(200).json({
@@ -278,7 +278,7 @@ function getMovieHandler(req,res){
 
 function addMovieHandler(req,res){
     const userInput = req.body;
-    const sql = `INSERT INTO firstMOV(title , movies_id , overview , poster_path , vote_average , vote_count)
+    const sql = `INSERT INTO movies(title , movies_id , overview , poster_path , vote_average , vote_count)
     VALUES($1,$2,$3,$4,$5,$6) RETURNING *`
     const sqlValues = [userInput.title , userInput.id ,userInput.overview 
         ,userInput.poster_path , userInput.vote_average , userInput.vote_count]
@@ -288,21 +288,30 @@ function addMovieHandler(req,res){
         }).catch(err => errorHandler(err,req,res))
 }
 
-// function updateMoviesHandler(req,res){
-//     const id = req.params.id;
-//     const userInput = req.body;
-
-//     const sql = `update movies set `
-
-// }
+function updateMoviesHandler(req,res){
+    const id = req.params.id;
+    const userInput = req.body;
+    const sql = `update movies set comment = '${userInput.comment}' where movies_id = ${id} returning *`
+    client.query(sql).then( (data)=>{
+        const sql = `SELECT * from movies`
+        client.query(sql).then((data)=>{
+            res.send(data.rows)
+        }).catch(err => errorHandler(err,req,res))
+    })
+}
 
 function deleteMoviesHandler(req,res){
     const id = req.params.id;
-
-    const sql = `delete from firstMOV where id =${id}`;
-
+    const sql = `delete from movies where movies_id =${id}`;
     client.query(sql).then(result =>{
-        res.status(204).json(result.rowCount)
+        const select_query = `select * from movies`;
+        client.query(select_query).then((data) => {
+            res.status(200).json(data.rows)
+        })
+        .catch((err) => {
+            errorHandler(err, req, res)
+        })
+
     }).catch(err => errorHandler(err,req,res))
 }
 
